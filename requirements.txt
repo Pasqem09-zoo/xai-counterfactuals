@@ -1,0 +1,19 @@
+# Deep Learning
+torch==2.14.1
+torchvision==0.29.1
+
+# Data processing
+numpy
+pandas
+pillow
+
+# Evaluation and visualization
+scikit-learn
+matplotlib
+tqdm
+
+# Jupyter notebooks
+ipykernel
+
+# Explainable AI
+# Alibi dependencies will be added after compatibility tests.
