@@ -11,6 +11,7 @@ pillow
 scikit-learn
 matplotlib
 tqdm
+wandb
 
 # Jupyter notebooks
 ipykernel

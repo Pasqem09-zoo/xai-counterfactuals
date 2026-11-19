@@ -1,0 +1,1384 @@
+\documentclass[10pt,a4paper,oneside]{book}
+
+% -------------------------------------------------
+% LINGUA, FONT E MATEMATICA
+% -------------------------------------------------
+\usepackage[italian]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools}
+
+% -------------------------------------------------
+% IMPAGINAZIONE
+% -------------------------------------------------
+\usepackage[
+    a4paper,
+    top=1.55cm,
+    bottom=1.60cm,
+    left=1.55cm,
+    right=1.55cm,
+    headsep=0.35cm,
+    footskip=0.80cm
+]{geometry}
+
+\usepackage{setspace}
+\setstretch{1.05}
+\usepackage{parskip}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+\usepackage{enumitem}
+\setlist[itemize]{topsep=2pt,itemsep=2pt}
+
+% -------------------------------------------------
+% TITOLI
+% -------------------------------------------------
+\usepackage{titlesec}
+\titleformat{\chapter}{\normalfont\LARGE\bfseries}{\thechapter.}{0.6em}{}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries}{\thesubsection}{0.6em}{}
+\titlespacing*{\chapter}{0pt}{-4pt}{12pt}
+\titlespacing*{\section}{0pt}{12pt}{5pt}
+\titlespacing*{\subsection}{0pt}{8pt}{3pt}
+
+% -------------------------------------------------
+% BOX COLORATI
+% -------------------------------------------------
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+
+\tcbset{
+    enhanced,
+    breakable,
+    boxrule=0.4pt,
+    arc=1mm,
+    left=6pt,
+    right=6pt,
+    top=5pt,
+    bottom=5pt,
+    before skip=7pt,
+    after skip=7pt
+}
+
+\newtcolorbox{definitionbox}[1]{
+    title=\textbf{Definizione -- #1},
+    colback=blue!4,
+    colframe=blue!55!black,
+    colbacktitle=blue!55!black,
+    coltitle=white
+}
+
+\newtcolorbox{importantbox}[1]{
+    title=\textbf{Idea chiave -- #1},
+    colback=orange!7,
+    colframe=orange!70!black,
+    colbacktitle=orange!70!black,
+    coltitle=white
+}
+
+\newtcolorbox{examplebox}[1]{
+    title=\textbf{Esempio -- #1},
+    colback=green!5,
+    colframe=green!45!black,
+    colbacktitle=green!45!black,
+    coltitle=white
+}
+
+\newtcolorbox{warningbox}[1]{
+    title=\textbf{Attenzione -- #1},
+    colback=red!5,
+    colframe=red!65!black,
+    colbacktitle=red!65!black,
+    coltitle=white
+}
+
+% -------------------------------------------------
+% INTESTAZIONE E LINK
+% -------------------------------------------------
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{XAI Counterfactuals}
+\fancyhead[R]{\nouppercase{\leftmark}}
+\fancyfoot[C]{\thepage}
+\setlength{\headheight}{13pt}
+\usepackage[hidelinks]{hyperref}
+
+% -------------------------------------------------
+% FRONTESPIZIO
+% -------------------------------------------------
+\title{\textbf{XAI Counterfactuals}\\[0.4em]
+       \large Quaderno di progetto e indice dei file}
+\author{}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+% =================================================
+\chapter{Guida al progetto}
+% =================================================
+
+\section{Obiettivo e impostazione}
+
+Il progetto studia spiegazioni controfattuali per un classificatore di immagini
+\textit{real/fake}. La prima architettura prevista è una ResNet18 pre-addestrata
+in PyTorch; in seguito verranno considerati i quattro metodi controfattuali
+disponibili nella libreria Alibi. Un'eventuale estensione a Vision Transformer
+(ViT) dipenderà dai risultati dei primi esperimenti.
+
+\begin{importantbox}{Finalità di questo documento}
+Questo file è un riferimento interno per ricordare \textbf{a cosa serve ogni
+componente della repository} e raccogliere progressivamente note su
+implementazione, esperimenti e decisioni. Non sostituisce il
+\texttt{WORKLOG.md}, che registra l'avanzamento cronologico del lavoro.
+\end{importantbox}
+
+\section{Struttura della repository}
+
+\begin{verbatim}
+xai-counterfactuals/
+|-- main.py
+|-- requirements.txt
+|-- README.md
+|-- WORKLOG.md
+|-- .gitignore
+|-- src/
+|   |-- __init__.py
+|   |-- config.py
+|   |-- dataset.py
+|   |-- models.py
+|   |-- train.py
+|   |-- evaluate.py
+|   `-- explainers/
+|       |-- __init__.py
+|       |-- cf.py
+|       |-- cem.py
+|       |-- cfproto.py
+|       `-- cfrl.py
+|-- experiments/
+|   `-- 01_exploration.ipynb
+|-- data/
+|   |-- real/
+|   `-- fake/
+|-- checkpoints/
+|-- results/
+|-- slides/
+|   `-- presentation.tex
+`-- docs/
+    `-- project_reference.tex
+\end{verbatim}
+
+\begin{warningbox}{Stato dei file}
+La struttura qui rappresentata è quella \textbf{prevista}. Alcuni file possono
+essere ancora vuoti o non essere stati salvati nella repository. L'indice
+va aggiornato man mano che l'implementazione procede.
+\end{warningbox}
+
+
+\section{File nella directory principale}
+
+\subsection{\texttt{main.py}}
+
+Punto di ingresso previsto per avviare i principali esperimenti.
+
+\subsection{\texttt{requirements.txt}}
+
+Elenco delle dipendenze Python necessarie al progetto.
+
+\subsection{\texttt{README.md}}
+
+Presentazione della repository, obiettivi e istruzioni d'uso.
+
+\subsection{\texttt{WORKLOG.md}}
+
+Diario settimanale delle attività, dei problemi e delle decisioni.
+
+\subsection{\texttt{.gitignore}}
+
+Esclude dal controllo di versione dati, checkpoint e file temporanei.
+
+
+\section{Moduli Python: \texttt{src/}}
+
+\subsection{\texttt{config.py}}
+
+Percorsi del progetto, parametri di training e scelta del dispositivo
+(CPU, MPS o CUDA).
+
+
+\subsection{\texttt{dataset.py}}
+
+Il file \texttt{dataset.py} si occupa di caricare le immagini del dataset,
+applicare le trasformazioni necessarie per ResNet18 e organizzare le
+osservazioni in batch per l'addestramento e la valutazione.
+
+Il codice è organizzato in due funzioni principali:
+\texttt{get\_transforms()} e \texttt{get\_dataloaders()}.
+
+\subsubsection{Preprocessing delle immagini}
+
+La funzione \texttt{get\_transforms()} definisce una sequenza di
+trasformazioni attraverso \texttt{transforms.Compose()}:
+
+\begin{verbatim}
+transform = transforms.Compose([
+    transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
+])
+\end{verbatim}
+
+\textbf{transforms.Compose()} permette di concatenare più trasformazioni,
+che vengono applicate nell'ordine specificato a ogni immagine.
+
+Le tre operazioni sono:
+
+\begin{enumerate}
+    \item \textbf{Resize}: ridimensiona l'immagine a
+    $224 \times 224$ pixel, indipendentemente dalla sua dimensione
+    originale.
+
+    \item \textbf{ToTensor}: converte l'immagine in un tensore PyTorch.
+    Per immagini RGB con valori interi tra 0 e 255, la trasformazione
+    converte i pixel in valori floating-point nell'intervallo $[0,1]$.
+    Inoltre, cambia l'ordine delle dimensioni da
+    $(H,W,C)$ a $(C,H,W)$.
+
+    \item \textbf{Normalize}: standardizza separatamente i tre canali
+    RGB utilizzando le medie e le deviazioni standard di ImageNet.
+\end{enumerate}
+
+La normalizzazione viene effettuata per ogni pixel del canale $c$:
+
+\[
+z_{c,h,w}
+=
+\frac{x_{c,h,w}-\mu_c}{\sigma_c},
+\]
+
+dove $\mu_c$ e $\sigma_c$ sono rispettivamente la media e la deviazione
+standard utilizzate per il canale $c$.
+
+\begin{importantbox}{Perché utilizziamo i parametri di ImageNet?}
+ResNet18 è pre-addestrata su ImageNet. Utilizzare la stessa
+normalizzazione permette di fornire al modello immagini preprocessate
+in modo coerente con quelle utilizzate durante il pre-training.
+
+Questa trasformazione non garantisce che il dataset FFHQ abbia media
+zero e varianza unitaria: utilizziamo statistiche fissate, calcolate
+su ImageNet.
+\end{importantbox}
+
+Al termine del preprocessing, una singola immagine è rappresentata
+da un tensore:
+
+\[
+x_i \in \mathbb{R}^{3 \times 224 \times 224}.
+\]
+
+\subsubsection{Caricamento del dataset con ImageFolder}
+
+Il caricamento delle immagini viene effettuato attraverso:
+
+\begin{verbatim}
+dataset = datasets.ImageFolder(
+    root=DATA_DIR,
+    transform=get_transforms()
+)
+\end{verbatim}
+
+\textbf{ImageFolder} è una classe di Torchvision che costruisce
+automaticamente un dataset a partire da una directory organizzata
+in sottocartelle, ciascuna corrispondente a una classe (https://docs.pytorch.org/vision/main/generated/torchvision.datasets.ImageFolder.html). 
+
+
+Nel nostro caso:
+
+\begin{verbatim}
+data/
+    fake/
+    real/
+\end{verbatim}
+
+Ogni immagine viene associata a un'etichetta numerica secondo
+l'ordine alfabetico delle sottocartelle:
+
+\[
+y_i =
+\begin{cases}
+0 & \text{se l'immagine è fake},\\
+1 & \text{se l'immagine è real}.
+\end{cases}
+\]
+
+L'oggetto \texttt{dataset} permette di accedere alle osservazioni
+tramite un indice. Ad esempio, \texttt{dataset[i]} restituisce
+una coppia:
+
+\[
+(x_i,y_i),
+\]
+
+dove $x_i$ è il tensore dell'immagine dopo il preprocessing
+e $y_i$ è la sua etichetta.
+
+È importante osservare che \texttt{ImageFolder} non carica
+necessariamente tutte le immagini in memoria: mantiene i percorsi
+dei file e legge le immagini quando vengono richieste.
+
+\subsubsection{Suddivisione in training, validation e test}
+
+Il dataset viene suddiviso utilizzando la funzione
+\texttt{random\_split()} di PyTorch:
+
+\begin{verbatim}
+generator = torch.Generator().manual_seed(RANDOM_SEED)
+
+train_set, val_set, test_set = random_split(
+    dataset,
+    [n_train, n_val, n_test],
+    generator=generator
+)
+\end{verbatim}
+
+La funzione \textbf{random\_split()} genera una partizione casuale
+degli indici del dataset, suddividendo le osservazioni in tre
+sottoinsiemi non sovrapposti.
+
+Le dimensioni sono definite da:
+
+\[
+n_{\mathrm{train}} = \lfloor 0.70n \rfloor,
+\]
+
+\[
+n_{\mathrm{val}} = \lfloor 0.15n \rfloor,
+\]
+
+\[
+n_{\mathrm{test}}
+=
+n-n_{\mathrm{train}}-n_{\mathrm{val}}.
+\]
+
+Il training set viene utilizzato per stimare i parametri del modello,
+il validation set per monitorare e selezionare il modello durante
+lo sviluppo, mentre il test set viene riservato alla valutazione finale.
+
+\begin{definitionbox}{torch.Generator e manual\_seed}
+\texttt{torch.Generator()} crea un generatore di numeri
+pseudo-casuali. Il metodo \texttt{manual\_seed()} ne fissa il seme.
+
+Utilizzando lo stesso seed, \texttt{random\_split()} produce
+la stessa suddivisione, a condizione che il dataset e il suo ordine
+rimangano invariati.
+
+Questo è importante per la riproducibilità degli esperimenti.
+\end{definitionbox}
+
+\subsubsection{DataLoader e costruzione dei batch}
+
+Dopo la suddivisione, ciascun sottoinsieme viene passato a un
+\texttt{DataLoader}:
+
+\begin{verbatim}
+train_loader = DataLoader(
+    train_set,
+    batch_size=BATCH_SIZE,
+    shuffle=True
+)
+\end{verbatim}
+
+Il \textbf{DataLoader} permette di iterare sul dataset attraverso
+gruppi di osservazioni, chiamati \textit{mini-batch}, invece di
+elaborare singolarmente ogni immagine.
+
+
+Con \texttt{BATCH\_SIZE = 32}, il training set viene suddiviso
+in mini-batch contenenti al massimo 32 osservazioni ciascuno.
+
+Indicando con $n_{\mathrm{train}}$ il numero di osservazioni
+nel training set, il numero totale di batch per epoca è:
+
+\[
+B = \left\lceil \frac{n_{\mathrm{train}}}{32} \right\rceil,
+\]
+
+dove $\lceil \cdot \rceil$ rappresenta la funzione ceiling,
+che arrotonda all'intero superiore.
+
+Indichiamo con $b \in \{1,\ldots,B\}$ l'indice del batch.
+Per un batch completo, i dati e le rispettive etichette
+hanno dimensioni:
+
+\[
+X^{(b)} \in \mathbb{R}^{32 \times 3 \times 224 \times 224},
+\qquad
+y^{(b)} \in \{0,1\}^{32}.
+\]
+
+In generale, indicando con $m_b$ il numero di osservazioni
+del batch $b$, abbiamo:
+
+\[
+X^{(b)} \in \mathbb{R}^{m_b \times 3 \times 224 \times 224},
+\qquad
+y^{(b)} \in \{0,1\}^{m_b},
+\]
+
+con $1 \leq m_b \leq 32$. L'ultimo batch può infatti
+contenere meno di 32 osservazioni.
+
+\begin{definitionbox}{Epoca (Epoch)}
+Un'\textbf{epoca} corrisponde a un passaggio completo
+attraverso tutte le osservazioni del training set.
+
+Durante un'epoca, il modello elabora sequenzialmente
+i $B$ mini-batch. Per ciascun batch vengono calcolati
+le predizioni, la funzione di perdita e, durante il training,
+l'aggiornamento dei parametri del modello.
+
+Pertanto, con un aggiornamento per batch, un'epoca
+comprende $B$ iterazioni di ottimizzazione.
+\end{definitionbox}
+
+\begin{examplebox}{Numero di batch per epoca}
+Supponiamo che il training set contenga
+$n_{\mathrm{train}}=100$ immagini e che
+\texttt{BATCH\_SIZE = 32}.
+
+Il numero di batch sarà:
+
+\[
+B = \left\lceil \frac{100}{32} \right\rceil = 4.
+\]
+
+Durante un'epoca il modello elaborerà:
+\[
+m_1=32,\quad m_2=32,\quad m_3=32,\quad m_4=4.
+\]
+
+Al termine dei quattro batch, tutte le 100 osservazioni
+saranno state utilizzate una volta e l'epoca sarà conclusa.
+\end{examplebox}
+
+Il parametro \texttt{shuffle=True} fa sì che, all'inizio
+di ogni nuova epoca, venga generato un nuovo ordinamento
+casuale delle osservazioni del training set.
+
+Di conseguenza, ogni epoca utilizza le stesse osservazioni,
+ma generalmente raggruppate in mini-batch differenti.
+
+Nei DataLoader di validation e test utilizziamo invece
+\texttt{shuffle=False}, perché non è necessario modificare
+l'ordine delle osservazioni per valutare il modello.
+
+\begin{importantbox}{Dataset e DataLoader}
+Il \texttt{Dataset} definisce come accedere a una singola
+osservazione $(x_i,y_i)$.
+
+Il \texttt{DataLoader} organizza queste osservazioni in batch,
+gestendone l'ordine e il caricamento durante l'esecuzione.
+
+Quindi il Dataset rappresenta la sorgente dei dati, mentre
+il DataLoader definisce come i dati vengono forniti al modello.
+\end{importantbox}
+
+\begin{warningbox}{Limiti dell'implementazione iniziale}
+La funzione \texttt{random\_split()} non garantisce una
+suddivisione stratificata rispetto alle classi. Pertanto,
+anche partendo da un dataset bilanciato, i singoli sottoinsiemi
+potrebbero contenere proporzioni diverse di immagini real e fake.
+
+Inoltre, tutte le immagini utilizzano attualmente lo stesso
+preprocessing, senza trasformazioni aggiuntive specifiche per
+il training.
+
+Queste scelte sono sufficienti per verificare inizialmente
+la pipeline, ma dovranno essere rivalutate prima degli
+esperimenti definitivi.
+\end{warningbox}
+
+\begin{warningbox}{Il significato di \texttt{shuffle=True}}
+Nel \texttt{DataLoader} di PyTorch, il parametro
+\texttt{shuffle=True} non indica un campionamento casuale
+con reinserimento, ma una \textbf{permutazione casuale
+senza reinserimento} degli indici del dataset.
+
+All'inizio di ogni epoca viene generata una permutazione
+casuale $\pi$ degli $n_{\mathrm{train}}$ indici. Questa
+permutazione viene successivamente suddivisa in $B$
+mini-batch consecutivi.
+
+Di conseguenza, i mini-batch costituiscono una partizione
+degli indici del training set:
+
+\[
+\bigcup_{b=1}^{B}\mathcal{B}_b
+=
+\{1,\ldots,n_{\mathrm{train}}\},
+\]
+
+\[
+\mathcal{B}_i \cap \mathcal{B}_j
+=
+\varnothing
+\qquad \forall i\neq j.
+\]
+
+Questo garantisce che \textbf{ogni osservazione venga
+utilizzata esattamente una volta per epoca}, anche se
+l'ordine e la composizione dei mini-batch cambiano
+casualmente tra epoche successive.
+
+La proprietà vale con \texttt{drop\_last=False}
+(impostazione predefinita). Se invece
+\texttt{drop\_last=True}, l'ultimo mini-batch incompleto
+viene scartato e alcune osservazioni possono non essere
+utilizzate durante quella specifica epoca.
+\end{warningbox}
+
+
+
+\subsection{\texttt{models.py}}
+
+Il file \texttt{models.py} definisce il classificatore utilizzato
+nel progetto. Inizialmente viene impiegata una \textbf{ResNet18},
+una rete neurale convoluzionale pre-addestrata su ImageNet,
+successivamente adattata al problema di classificazione binaria
+tra immagini \textit{real} e \textit{fake}.
+
+Non implementiamo manualmente l'architettura della rete, poiché
+Torchvision fornisce già una ResNet18 completa, comprensiva
+dei layer convoluzionali, dei blocchi residuali e dei relativi
+pesi pre-addestrati. Il codice definisce un'unica classe, \texttt{ResNet18Classifier},
+che eredita da \texttt{nn.Module}.
+
+\subsubsection{Modelli pre-addestrati e transfer learning}
+
+La funzione \texttt{resnet18()} di Torchvision permette di
+istanziare l'architettura ResNet18 scegliendo se utilizzare
+pesi pre-addestrati oppure inizializzazioni casuali.
+
+\begin{verbatim}
+model = resnet18(weights=None)
+\end{verbatim}
+
+In questo caso viene costruita l'architettura, ma i parametri
+non provengono da un precedente addestramento. Nel nostro progetto utilizziamo invece:
+
+\begin{verbatim}
+model = resnet18(
+    weights=ResNet18_Weights.DEFAULT
+)
+\end{verbatim}
+
+L'argomento \texttt{weights} specifica quali pesi pre-addestrati
+caricare. Con \texttt{ResNet18\_Weights.DEFAULT} vengono
+utilizzati i pesi pre-addestrati di riferimento forniti
+da Torchvision per ImageNet-1K, un problema di classificazione con 1000 classi.
+
+\begin{definitionbox}{Transfer Learning}
+Il \textbf{Transfer Learning} consiste nel riutilizzare
+conoscenze apprese da un modello durante un precedente task
+per affrontare un nuovo problema.
+
+Indicando con $\theta_{\mathrm{pre}}$ i parametri ottenuti
+durante il pre-training, invece di partire da una
+inizializzazione casuale $\theta_0$, utilizziamo:
+
+\[
+\theta_0 = \theta_{\mathrm{pre}},
+\]
+
+per i layer di cui riutilizziamo i pesi.
+
+Nel nostro caso, le rappresentazioni visive apprese
+su ImageNet vengono riutilizzate per la classificazione
+di volti reali e generati.
+\end{definitionbox}
+
+Questo approccio risulta particolarmente utile quando
+il dataset disponibile per il nuovo task è relativamente
+piccolo. Infatti, i layer della rete hanno già appreso
+rappresentazioni utili, come bordi, texture e strutture
+visive più complesse.
+
+Il modello necessita comunque di essere adattato al nuovo
+problema: i pesi pre-addestrati non permettono direttamente
+di distinguere immagini reali da immagini generate.
+
+\subsubsection{La classe ResNet18Classifier}
+
+La classe viene dichiarata come:
+
+\begin{verbatim}
+class ResNet18Classifier(nn.Module):
+\end{verbatim}
+
+\texttt{nn.Module} è la classe base di PyTorch per la
+costruzione di reti neurali. Ereditare da questa classe
+permette di utilizzare automaticamente funzionalità
+come la gestione dei parametri, il trasferimento del
+modello su GPU e le modalità di training e valutazione.
+
+All'interno del costruttore troviamo:
+
+\begin{verbatim}
+def __init__(self):
+    super().__init__()
+\end{verbatim}
+
+La chiamata \texttt{super().\_\_init\_\_()} inizializza
+la classe padre \texttt{nn.Module}, rendendo possibile
+la registrazione dei layer e dei parametri del modello.
+
+Successivamente carichiamo la ResNet18:
+
+\begin{verbatim}
+self.model = resnet18(
+    weights=ResNet18_Weights.DEFAULT
+)
+\end{verbatim}
+
+L'attributo \texttt{self.model} contiene quindi
+l'intera rete neurale pre-addestrata.
+
+\subsubsection{Adattamento del classificatore finale}
+
+La ResNet18 originale è stata addestrata per distinguere
+1000 classi di ImageNet. Il suo ultimo layer è un
+\textit{fully connected layer}, accessibile tramite
+l'attributo \texttt{fc}.
+
+Questo layer riceve un vettore di 512 caratteristiche
+estratte dalla rete e restituisce 1000 valori:
+
+\[
+\mathbb{R}^{512}
+\longrightarrow
+\mathbb{R}^{1000}.
+\]
+
+Nel nostro progetto abbiamo invece soltanto due classi:
+\textit{fake} e \textit{real}.
+
+Per questo motivo sostituiamo l'ultimo layer:
+
+\begin{verbatim}
+num_features = self.model.fc.in_features
+self.model.fc = nn.Linear(num_features, 2)
+\end{verbatim}
+
+L'attributo \texttt{in\_features} restituisce il numero
+di caratteristiche in ingresso al layer originale,
+che nel caso di ResNet18 è pari a 512.
+
+La funzione \texttt{nn.Linear(512, 2)} costruisce
+un nuovo layer lineare che trasforma le 512 caratteristiche
+in due output.
+
+Matematicamente, indicando con
+$h(x)\in\mathbb{R}^{512}$ il vettore delle
+caratteristiche estratte dalla ResNet18, il nuovo
+classificatore calcola:
+
+\[
+z(x)=Wh(x)+b,
+\]
+
+dove:
+
+\[
+W\in\mathbb{R}^{2\times512},
+\qquad
+b\in\mathbb{R}^{2},
+\qquad
+z(x)\in\mathbb{R}^{2}.
+\]
+
+I due elementi di $z(x)$ rappresentano gli score
+associati alle classi \textit{fake} e \textit{real}.
+
+Il numero di parametri del nuovo layer è:
+
+\[
+512\cdot2+2=1026,
+\]
+
+ottenuto sommando i 1024 pesi della matrice $W$
+e i due termini di bias.
+
+\begin{importantbox}{Quali pesi sono pre-addestrati?}
+Quando sostituiamo il layer finale, manteniamo i
+pesi pre-addestrati di tutti i layer precedenti,
+mentre i 1026 parametri del nuovo classificatore
+vengono inizializzati casualmente.
+
+Di conseguenza, il modello dispone già di un sistema
+di estrazione delle caratteristiche visive, ma deve
+ancora imparare a utilizzare queste caratteristiche
+per distinguere immagini reali e generate.
+\end{importantbox}
+
+\subsubsection{Forward pass}
+
+Il metodo \texttt{forward()} definisce come il modello
+elabora gli input:
+
+\begin{verbatim}
+def forward(self, x):
+    return self.model(x)
+\end{verbatim}
+
+Quando richiamiamo:
+
+\begin{verbatim}
+outputs = model(images)
+\end{verbatim}
+
+PyTorch esegue automaticamente il metodo
+\texttt{forward()}, applicando la ResNet18
+alle immagini fornite in input.
+
+Considerando il mini-batch $b$ con $m_b$ immagini,
+l'input ha dimensioni:
+
+\[
+X^{(b)}
+\in
+\mathbb{R}^{m_b\times3\times224\times224}.
+\]
+
+Il modello restituisce:
+
+\[
+Z^{(b)}
+=
+f_{\theta}(X^{(b)})
+\in
+\mathbb{R}^{m_b\times2}.
+\]
+
+Ogni riga di $Z^{(b)}$ contiene i due score
+relativi a una singola immagine.
+
+\begin{definitionbox}{Logits e probabilità}
+Gli output prodotti dal classificatore sono chiamati
+\textbf{logits}. Non rappresentano direttamente
+probabilità, poiché non sono vincolati all'intervallo
+$[0,1]$ e la loro somma non deve necessariamente
+essere pari a uno.
+
+Per ottenere le probabilità delle due classi,
+possiamo applicare la funzione \textit{softmax}:
+
+\[
+p_k(x)
+=
+\frac{\exp(z_k(x))}
+{\displaystyle\sum_{j=0}^{1}\exp(z_j(x))},
+\qquad k\in\{0,1\}.
+\]
+
+Nel nostro dataset:
+
+\[
+p_0(x)=P_{\theta}(\text{fake}\mid x),
+\qquad
+p_1(x)=P_{\theta}(\text{real}\mid x).
+\]
+
+La classe predetta corrisponde all'indice del
+logit maggiore:
+
+\[
+\hat{y}(x)
+=
+\arg\max_{k\in\{0,1\}} z_k(x).
+\]
+\end{definitionbox}
+
+\subsubsection{Parametri addestrabili}
+
+Un ultimo aspetto importante riguarda la differenza
+tra caricare un modello pre-addestrato e congelarne
+i parametri.
+
+Nel nostro codice, i parametri della ResNet18
+non vengono congelati. Pertanto, per impostazione
+predefinita, sia i layer pre-addestrati sia il
+nuovo classificatore finale risultano addestrabili.
+
+Durante il training potremo scegliere tra due approcci:
+
+\textbf{Feature extraction}: mantenere fissi i
+parametri dei layer pre-addestrati e aggiornare
+soltanto quelli del classificatore finale.
+
+\textbf{Fine-tuning}: aggiornare anche i parametri
+pre-addestrati, adattando progressivamente
+l'intera rete al nuovo task.
+
+\begin{warningbox}{Stato attuale del modello}
+Il file \texttt{models.py} definisce e inizializza
+il classificatore, ma non esegue alcun addestramento
+sul dataset real/fake.
+
+Il nuovo layer finale ha ancora pesi casuali,
+quindi le predizioni non sono necessariamente
+significative per il nostro problema.
+
+Il training sarà implementato separatamente
+nel file \texttt{train.py}, dove definiremo
+la funzione di perdita, l'ottimizzatore
+e il ciclo di aggiornamento dei parametri.
+\end{warningbox}
+
+
+
+\subsection{\texttt{train.py}}
+
+Il file \texttt{train.py} implementa l'addestramento del
+classificatore ResNet18 sul dataset di immagini reali e generate.
+
+Il primo esperimento utilizza una strategia di
+\textbf{feature extraction}: i parametri dell'estrattore
+di caratteristiche pre-addestrato su ImageNet vengono
+mantenuti fissi, mentre vengono ottimizzati soltanto
+i parametri del nuovo classificatore finale.
+
+Il training viene effettuato mediante mini-batch,
+utilizzando la Cross-Entropy come funzione di perdita
+e Adam come algoritmo di ottimizzazione.
+
+\subsubsection{Congelamento dei parametri}
+
+Il modello viene inizializzato mediante:
+
+\begin{verbatim}
+model = ResNet18Classifier().to(DEVICE)
+\end{verbatim}
+
+La chiamata \texttt{to(DEVICE)} trasferisce i parametri
+e i buffer del modello sul dispositivo specificato,
+che nel nostro caso può essere CPU, CUDA oppure MPS.
+
+Successivamente vengono congelati tutti i parametri:
+
+\begin{verbatim}
+for parameter in model.parameters():
+    parameter.requires_grad = False
+\end{verbatim}
+
+L'attributo \texttt{requires\_grad} indica se PyTorch
+deve registrare le operazioni necessarie a calcolare
+le derivate rispetto a un determinato parametro.
+Impostandolo a \texttt{False}, il parametro non
+riceverà gradienti durante il backward pass.
+Riattiviamo quindi il calcolo dei gradienti
+soltanto per il classificatore finale:
+
+\begin{verbatim}
+for parameter in model.model.fc.parameters():
+    parameter.requires_grad = True
+\end{verbatim}
+
+Il modello possiede complessivamente
+$11\,177\,538$ parametri, dei quali soltanto
+$1\,026$ risultano addestrabili.
+
+\begin{importantbox}{Congelamento dei parametri}
+Impostare \texttt{requires\_grad=False} non equivale
+a rimuovere i parametri dal modello.
+
+I pesi pre-addestrati continuano a essere utilizzati
+durante il forward pass, ma non vengono aggiornati
+dall'ottimizzatore.
+
+Il nostro problema consiste quindi nell'apprendere
+un classificatore lineare sulle 512 caratteristiche
+estratte dalla ResNet18.
+\end{importantbox}
+
+\subsubsection{Una particolarità: eval() durante il training}
+
+Nel nostro codice, dopo aver congelato i parametri,
+troviamo:
+
+\begin{verbatim}
+model.eval()
+\end{verbatim}
+
+Normalmente, durante l'addestramento di una rete
+neurale, si utilizza:
+
+\begin{verbatim}
+model.train()
+\end{verbatim}
+
+mentre \texttt{model.eval()} viene utilizzato
+durante la validazione e il test.
+
+Nel nostro caso scegliamo deliberatamente di
+utilizzare \texttt{eval()} anche durante il training.
+
+Il motivo riguarda principalmente i layer
+di \textbf{Batch Normalization} presenti in ResNet18.
+
+Durante il training standard, questi layer
+normalizzano le attivazioni utilizzando statistiche
+calcolate sul mini-batch e aggiornano delle
+statistiche interne, dette \textit{running statistics}.
+
+In modalità valutazione, invece, utilizzano
+le statistiche accumulate durante l'addestramento
+precedente, senza aggiornarle.
+
+\begin{definitionbox}{Batch Normalization}
+Una trasformazione di Batch Normalization può essere
+espressa, per una singola caratteristica, come:
+
+\[
+\operatorname{BN}(x)
+=
+\gamma
+\frac{x-\mu}{\sqrt{\sigma^2+\varepsilon}}
++\beta,
+\]
+
+dove $\gamma$ e $\beta$ sono parametri
+apprendibili, mentre $\mu$ e $\sigma^2$
+sono le statistiche utilizzate per normalizzare
+le attivazioni.
+
+In modalità training, per la normalizzazione
+vengono utilizzate le statistiche del mini-batch.
+
+In modalità evaluation, vengono utilizzate
+le stime memorizzate nelle running statistics.
+\end{definitionbox}
+
+Nel nostro esperimento vogliamo mantenere fisso
+l'intero estrattore di caratteristiche, comprese
+le sue statistiche di Batch Normalization.
+Per questo motivo manteniamo il modello in modalità
+\texttt{eval()} anche durante l'ottimizzazione.
+
+\begin{warningbox}{eval() non disabilita i gradienti}
+La chiamata \texttt{model.eval()} modifica il
+comportamento di alcuni layer, come Batch Normalization
+e Dropout, ma \textbf{non disabilita il calcolo dei gradienti}.
+
+Di conseguenza, nonostante il modello sia in modalità
+evaluation, i 1026 parametri del classificatore
+continuano a ricevere gradienti durante
+\texttt{loss.backward()}.
+
+La disabilitazione del calcolo automatico dei gradienti
+è invece controllata da \texttt{torch.no\_grad()}.
+
+Questa scelta è appropriata per il nostro primo
+esperimento di feature extraction, ma non rappresenta
+la configurazione standard di un fine-tuning completo.
+\end{warningbox}
+
+\subsubsection{Funzione di perdita e ottimizzatore}
+
+La funzione di perdita viene definita tramite:
+
+\begin{verbatim}
+criterion = nn.CrossEntropyLoss()
+\end{verbatim}
+
+Per ogni osservazione $i$, la rete restituisce
+due logit:
+
+\[
+z_i=(z_{i,0},z_{i,1}),
+\]
+
+corrispondenti alle classi \textit{fake} e \textit{real}.
+
+La Cross-Entropy per il mini-batch $b$ è:
+
+\[
+\mathcal{L}_b(\phi)
+=
+-\frac{1}{m_b}
+\sum_{i\in b}
+\log
+\left(
+\frac{\exp(z_{i,y_i})}
+{\sum_{k=0}^{1}\exp(z_{i,k})}
+\right).
+\]
+
+L'ottimizzatore viene inizializzato come:
+
+\begin{verbatim}
+optimizer = torch.optim.Adam(
+    model.model.fc.parameters(),
+    lr=LEARNING_RATE
+)
+\end{verbatim}
+
+L'argomento passato all'ottimizzatore è importante:
+
+\begin{verbatim}
+model.model.fc.parameters()
+\end{verbatim}
+
+In questo modo Adam riceve esclusivamente
+i parametri del classificatore finale e non
+quelli dell'intera rete.
+
+Il learning rate è specificato tramite
+\texttt{LEARNING\_RATE}, definito in
+\texttt{config.py}.
+
+\subsubsection{Backward pass e aggiornamento dei parametri}
+
+Per ogni mini-batch viene eseguita la seguente
+sequenza di operazioni:
+
+\begin{verbatim}
+optimizer.zero_grad()
+
+outputs = model(images)
+loss = criterion(outputs, labels)
+
+loss.backward()
+optimizer.step()
+\end{verbatim}
+
+Le due istruzioni più importanti da approfondire
+sono \texttt{zero\_grad()} e \texttt{backward()}.
+
+\paragraph{Differenziazione automatica}
+
+La chiamata:
+
+\begin{verbatim}
+loss.backward()
+\end{verbatim}
+
+esegue la differenziazione automatica della
+funzione di perdita rispetto ai parametri
+per i quali è attivo \texttt{requires\_grad}.
+
+Nel nostro caso vengono calcolate le componenti:
+
+\[
+\nabla_\phi\mathcal{L}_b(\phi)
+=
+\left(
+\frac{\partial\mathcal{L}_b}{\partial\phi_1},
+\ldots,
+\frac{\partial\mathcal{L}_b}{\partial\phi_{1026}}
+\right).
+\]
+
+La successiva chiamata:
+
+\begin{verbatim}
+optimizer.step()
+\end{verbatim}
+
+utilizza tali gradienti per aggiornare i parametri
+del classificatore secondo l'algoritmo Adam.
+
+\subsubsection{Calcolo delle metriche di training}
+
+Durante ogni epoca vengono accumulate la perdita
+e il numero di classificazioni corrette.
+
+Per la loss utilizziamo:
+
+\begin{verbatim}
+batch_size = labels.size(0)
+train_loss += loss.item() * batch_size
+\end{verbatim}
+
+È importante osservare che, con la configurazione
+predefinita di \texttt{CrossEntropyLoss},
+\texttt{loss.item()} restituisce la perdita
+\textbf{media del mini-batch}.
+
+Per questo la moltiplichiamo per
+\texttt{batch\_size}: vogliamo recuperare la
+somma delle perdite delle osservazioni del batch.
+
+Al termine dell'epoca calcoliamo:
+
+\begin{verbatim}
+train_loss /= train_total
+\end{verbatim}
+
+ottenendo:
+
+\[
+\overline{\mathcal{L}}_{\mathrm{train}}
+=
+\frac{
+\displaystyle\sum_{b=1}^{B}
+m_b\mathcal{L}_b
+}{
+\displaystyle\sum_{b=1}^{B}m_b
+}.
+\]
+
+La ponderazione con $m_b$ è necessaria perché
+l'ultimo mini-batch potrebbe contenere meno
+di 32 osservazioni.
+
+Se calcolassimo semplicemente la media delle
+loss dei mini-batch, assegneremmo lo stesso peso
+a batch di dimensioni differenti.
+
+\paragraph{Calcolo dell'accuracy}
+
+Le predizioni vengono ottenute tramite:
+
+\begin{verbatim}
+predictions = outputs.argmax(dim=1)
+\end{verbatim}
+
+La funzione \texttt{argmax(dim=1)} seleziona,
+per ciascuna osservazione, l'indice del logit
+più elevato.
+
+Poiché i logit hanno dimensioni
+$(m_b,2)$, l'operazione restituisce
+un vettore di $m_b$ etichette predette.
+
+Il numero di classificazioni corrette viene
+calcolato con:
+
+\begin{verbatim}
+train_correct += (
+    predictions == labels
+).sum().item()
+\end{verbatim}
+
+L'accuracy finale è:
+
+\[
+\operatorname{Accuracy}_{\mathrm{train}}
+=
+\frac{1}{n_{\mathrm{train}}}
+\sum_{i=1}^{n_{\mathrm{train}}}
+\mathbb{I}(\hat y_i=y_i).
+\]
+
+\begin{warningbox}{Interpretazione della training loss}
+La training loss viene accumulata durante l'epoca,
+mentre i parametri del classificatore cambiano
+dopo ogni mini-batch.
+
+Pertanto, la loss di training riportata
+non coincide necessariamente con la perdita
+dell'intero training set valutata utilizzando
+i parametri finali dell'epoca.
+
+La validation loss, invece, viene calcolata
+con il modello fissato al termine dell'epoca.
+\end{warningbox}
+
+\subsubsection{Validazione senza aggiornamento dei pesi}
+
+Al termine di ogni epoca, il modello viene
+valutato sul validation set.
+
+Il codice utilizza:
+
+\begin{verbatim}
+with torch.no_grad():
+    for images, labels in val_loader:
+        outputs = model(images)
+        loss = criterion(outputs, labels)
+\end{verbatim}
+
+Il contesto \texttt{torch.no\_grad()} disabilita
+la registrazione delle operazioni per la
+differenziazione automatica.
+
+Questo riduce il consumo di memoria e il lavoro
+necessario durante la validazione.
+
+Inoltre, non vengono eseguite le chiamate:
+
+\begin{verbatim}
+loss.backward()
+optimizer.step()
+\end{verbatim}
+
+Di conseguenza, durante la validazione non vengono
+aggiornati i parametri del classificatore.
+
+\begin{importantbox}{Differenza tra eval e nograd}
+\texttt{model.eval()} imposta il comportamento
+dei layer che distinguono tra training ed evaluation.
+
+\texttt{torch.no\_grad()} disabilita la costruzione
+del grafo computazionale per il calcolo dei gradienti.
+
+Le due istruzioni non sono equivalenti.
+
+Nel nostro esperimento utilizziamo
+\texttt{eval()} anche durante il training,
+ma \texttt{no\_grad()} soltanto durante
+la validazione.
+\end{importantbox}
+
+\begin{importantbox}{Best checkpoint}
+Il modello salvato è quello che ha ottenuto
+la minore validation loss tra le epoche eseguite:
+
+\[
+t^*
+=
+\arg\min_{t\in\{1,\ldots,T\}}
+\mathcal{L}_{\mathrm{val}}(\phi_t).
+\]
+
+Il checkpoint contiene lo stato del modello
+all'epoca $t^*$ e non necessariamente quello
+dell'ultima epoca.
+
+Questa selezione permette di evitare di scegliere
+automaticamente il modello dopo l'ultimo
+aggiornamento, che potrebbe aver peggiorato
+le prestazioni sui dati di validazione.
+
+Per riutilizzare il checkpoint sarà necessario
+ricostruire la stessa architettura e caricare
+i pesi mediante \texttt{load\_state\_dict()}.
+
+Il salvataggio del solo \texttt{state\_dict()}
+non include lo stato dell'ottimizzatore:
+è sufficiente per eseguire successive predizioni,
+ma non per riprendere esattamente il training
+dal punto in cui era stato interrotto.
+\end{importantbox}
+
+\begin{warningbox}{Utilizzo del test set}
+La selezione del modello attraverso la validation loss
+costituisce già una forma di scelta basata sui dati.
+
+Per stimare le prestazioni del classificatore
+selezionato su osservazioni mai utilizzate
+per l'addestramento o per la selezione,
+dovremo valutarlo successivamente sul test set.
+
+Il test set non deve quindi influenzare
+la scelta del numero di epoche o del checkpoint.
+\end{warningbox}
+
+
+\subsection{\texttt{evaluate.py}}
+
+Valutazione del classificatore tramite metriche e predizioni sul test set.
+
+\subsection{\texttt{\_\_init\_\_.py}}
+
+File che identificano le cartelle del codice come package Python.
+
+
+\section{Spiegazioni controfattuali: \texttt{src/explainers/}}
+
+\subsection{\texttt{cf.py}}
+
+Esperimenti con \textit{Counterfactual Instances}.
+
+\subsection{\texttt{cem.py}}
+
+Esperimenti con \textit{Contrastive Explanation Method}.
+
+\subsection{\texttt{cfproto.py}}
+
+Esperimenti con \textit{Counterfactuals Guided by Prototypes}.
+
+\subsection{\texttt{cfrl.py}}
+
+Esperimenti con \textit{Counterfactuals with Reinforcement Learning}.
+
+
+\section{Esperimenti, dati e documentazione}
+
+\subsection{\texttt{experiments/01\_exploration.ipynb}}
+
+Notebook per verificare ambiente Python, configurazione, caricamento dati
+e primi test dei modelli.
+
+\subsection{\texttt{data/real/} e \texttt{data/fake/}}
+
+Immagini delle due classi. FFHQ è previsto per i volti reali; occorre
+aggiungere una sorgente per quelli generati.
+
+\subsection{\texttt{checkpoints/}}
+
+Pesi dei modelli salvati durante e dopo l'addestramento.
+
+\subsection{\texttt{results/}}
+
+Metriche, grafici ed esempi di immagini controfattuali.
+
+\subsection{\texttt{slides/presentation.tex}}
+
+Presentazione per il ricevimento intermedio e l'esposizione finale.
+
+\subsection{\texttt{docs/project\_reference.tex}}
+
+Questo documento di consultazione, da aggiornare durante il progetto.
+
+
+\section{Stato del lavoro}
+
+\begin{examplebox}{Configurazione iniziale}
+\begin{itemize}
+    \item Repository GitHub creata e struttura iniziale predisposta.
+    \item Ambiente \texttt{XAIvenv} configurato sul Mac; PyTorch e MPS verificati.
+    \item Accesso al server UniFi verificato, da utilizzare per esperimenti
+          computazionalmente più impegnativi.
+    \item \texttt{config.py} e \texttt{dataset.py}: prime versioni impostate;
+          esecuzione e contenuto effettivo da verificare in VS Code.
+    \item Notebook di esplorazione previsto con celle di controllo
+          dell'ambiente e del dataset.
+\end{itemize}
+\end{examplebox}
+
+\begin{importantbox}{Prossimo traguardo}
+Preparare un piccolo dataset \textit{real/fake}, verificare i DataLoader
+e caricare ResNet18. Solo dopo iniziare il confronto dei metodi Alibi.
+\end{importantbox}
+
+% =================================================
+\chapter{Appunti tecnici}
+% =================================================
+
+% Aggiungere qui spiegazioni e risultati, man mano che vengono verificati.
+
+\section{Dataset e preprocessing}
+\textit{Da completare: sorgenti dati, classi, split, trasformazioni e controlli.}
+
+\section{Classificatore ResNet18}
+\textit{Da completare: architettura, fine-tuning, iperparametri e metriche.}
+
+\section{Metodi controfattuali di Alibi}
+\textit{Da completare: prerequisiti, compatibilità e risultati dei quattro metodi.}
+
+\section{Esperimenti e risultati}
+\textit{Da completare: impostazione sperimentale, tabelle e osservazioni.}
+
+\section{Decisioni e questioni aperte}
+\textit{Da aggiornare dopo i test e il ricevimento con il professore.}
+
+\end{document}
