@@ -211,3 +211,118 @@ probabilmente il problema principale è la strategia di addestramento:
 Full fine-tuning significantly improved performance, but generalization remains limited. Future experiments will investigate regularization techniques, including dropout, weight decay, learning rate scheduling, and data augmentation.
 
 **W&B run:** [resnet18full_lr1e-5](https://forge.coreweave.com/wandb/pasqem-university-of-florence/xai-counterfactuals/runs/7omnpppz)
+
+
+
+
+### 🟧 ESPERIMENTO 06 — ResNet18 Full Fine-Tuning con Dropout (p = 0.3)
+
+> [!IMPORTANT]
+> **Obiettivo:** verificare se l'introduzione del dropout nel classificatore finale migliora la generalizzazione e riduce l'overfitting osservato negli esperimenti precedenti.
+
+**Configurazione**
+- Dataset: 10.000 immagini (5.000 FFHQ reali, 5.000 StyleGAN2 fake).
+- Modello: ResNet18 pre-addestrata su ImageNet, full fine-tuning.
+- Ottimizzatore: AdamW, weight decay = 0.01.
+- Learning rate: \(10^{-5}\).
+- Dropout: \(p=0.3\), applicato alle 512 feature prima del classificatore.
+- Batch size: 32; epoche: 10.
+
+**Risultati principali**
+
+| Metrica | Valore |
+|---|---:|
+| Training accuracy finale | 99,71% |
+| Validation accuracy finale | 77,93% |
+| Migliore validation loss (epoca 5) | 0,5334 |
+| Validation accuracy all'epoca 5 | 74,13% |
+| Test accuracy (checkpoint migliore) | 74,00% |
+| Test loss (checkpoint migliore) | 0,5287 |
+
+**Osservazioni**
+
+Il dropout ha rallentato leggermente l'apprendimento, ma non ha eliminato l'overfitting. La training accuracy raggiunge comunque quasi il 100%, mentre la validation loss torna a crescere dopo la quinta epoca, nonostante l'accuracy continui a migliorare.
+
+Rispetto al precedente full fine-tuning senza dropout, la migliore validation loss è peggiorata da **0,5126 a 0,5334**, mentre la test accuracy del checkpoint selezionato è diminuita dal **75,80% al 74,00%**.
+
+**Conclusione:** il dropout con \(p=0.3\), applicato soltanto al classificatore finale, non ha prodotto benefici evidenti nella configurazione sperimentata. Nei prossimi esperimenti sarà opportuno valutare altre strategie di regolarizzazione, in particolare data augmentation e learning rate scheduling.
+
+
+
+### 🟧 EXP07 — Data augmentation (Horizontal Flip + Dropout)
+
+**Configurazione:** ResNet18 con full fine-tuning, 15 epoche, learning rate \(10^{-5}\), weight decay \(0.01\), dropout \(p=0.3\) e `RandomHorizontalFlip(p=0.5)` applicato esclusivamente al training set.
+
+**Risultati:** la migliore validation loss è **0.4971 all'epoca 8**, con validation accuracy del 78.13%. La massima validation accuracy raggiunge **80.47% all'epoca 14**. Il checkpoint migliore, selezionato sulla validation loss, ottiene **77.27% di test accuracy** e test loss pari a **0.4954**.
+
+**Osservazioni:** rispetto agli esperimenti precedenti, la validation loss raggiunge un minimo inferiore e più tardivo. Tuttavia, dopo l'epoca 8 ricomincia a crescere mentre la training loss continua a diminuire, indicando che l'overfitting persiste. Le 15 epoche confermano che prolungare il training non migliora necessariamente la generalizzazione misurata con la Cross-Entropy.
+
+**Nota:** verificare l'ottimizzatore effettivamente utilizzato, poiché il log riporta `Adam` anziché `AdamW`.
+
+**W&B:** [EXP07 — Augmentation + Dropout](https://forge.coreweave.com/wandb/pasqem-university-of-florence/xai-counterfactuals/runs/pv7125zx)
+
+
+
+### 🟧 EXP08 — AdamW + Augmentation + Dropout 0.08
+
+**Configurazione:** ResNet18 full fine-tuning, AdamW (`lr=1e-5`, `weight_decay=0.01`), dropout `p=0.08`, `RandomHorizontalFlip(p=0.5)` e 15 epoche.
+
+**Risultati:**
+- Migliore validation loss: **0.4860 (epoca 8)**, con accuracy del 78.33%.
+- Massima validation accuracy: **81.40% (epoca 14)**.
+- Test accuracy del miglior checkpoint: **78.20%**, test loss 0.4837.
+- Confusion matrix sulla validation: `[[597, 153], [172, 578]]`, con recall Fake 79.6% e Real 77.1%.
+
+**Osservazioni:** leggero miglioramento rispetto a EXP07 (validation loss 0.4971, test accuracy 77.27%), ma il confronto non isola l'effetto del dropout perché è cambiato anche l'ottimizzatore. L'overfitting persiste: dopo l'epoca 8 la validation loss ricomincia a crescere, mentre la training accuracy raggiunge il 99.76%.
+
+**Prossimo esperimento:** introdurre `ReduceLROnPlateau` per verificare se la riduzione adattiva del learning rate permette di migliorare la generalizzazione.
+
+**W&B:** [EXP08 — AdamW + Augmentation + Dropout 0.08](https://forge.coreweave.com/wandb/pasqem-university-of-florence/xai-counterfactuals/runs/fvwwsjnv)
+
+
+
+
+### 🟧 EXP09 — Learning Rate Scheduler + Early Stopping
+
+**Configurazione:** ResNet18 full fine-tuning, AdamW (`lr=1e-5`, `weight_decay=0.01`), dropout `p=0.08`, `RandomHorizontalFlip(p=0.5)`, massimo 25 epoche. Introdotti `ReduceLROnPlateau` (`factor=0.5`, `patience=2`) ed early stopping (`patience=8`).
+
+**Risultati:** migliore validation loss **0.4860 all'epoca 8**, identica a EXP08. Il learning rate viene dimezzato alle epoche 11 e 14, senza ottenere nuovi minimi. L'early stopping interrompe il training all'epoca 16. Il miglior checkpoint raggiunge **78.20% di test accuracy**, con test loss **0.4837**.
+
+**Osservazioni:** lo scheduler rallenta il peggioramento della validation loss nelle ultime epoche, ma non migliora il checkpoint ottimale. L'early stopping funziona correttamente, evitando 9 epoche aggiuntive. L'overfitting persiste.
+
+**Conclusione:** mantenere scheduler ed early stopping per i futuri esperimenti, concentrandosi ora su nuove strategie di data augmentation.
+
+**W&B:** [EXP09 — Scheduler + Early Stopping](https://forge.coreweave.com/wandb/pasqem-university-of-florence/xai-counterfactuals/runs/nxigpj0z)
+
+
+
+
+### 🟧 EXP10 — ResNet50 Full Fine-Tuning
+
+**Configurazione:** sostituita ResNet18 con ResNet50 preaddestrata su ImageNet (23,5M parametri addestrabili). AdamW (`lr=1e-5`, `weight_decay=0.01`), dropout `p=0.08`, `RandomHorizontalFlip(p=0.5)`, scheduler `ReduceLROnPlateau` ed early stopping (`patience=8`). Massimo 25 epoche.
+
+**Risultati:** migliore validation loss **0.2029 all'epoca 14**, con validation accuracy **91.87%**. Massima validation accuracy **92.87%** (epoca 20). Il miglior checkpoint raggiunge **92.47% di test accuracy** e test loss **0.2175**.
+
+**Osservazioni:** miglioramento netto rispetto a ResNet18 (78.20% di test accuracy). La validation loss rimane relativamente stabile dopo il minimo, nonostante la training accuracy raggiunga quasi il 100%. Lo scheduler riduce il learning rate alle epoche 17 e 20 senza migliorare ulteriormente il checkpoint. Early stopping all'epoca 22.
+
+**Conclusione:** ResNet50 rappresenta un miglioramento significativo e viene scelta come classificatore di riferimento per i successivi esperimenti sui controfattuali.
+
+**W&B:** [EXP10 — ResNet50](https://forge.coreweave.com/wandb/pasqem-university-of-florence/xai-counterfactuals/runs/pm04gtzz)
+
+
+
+
+
+## Week 4 - November 23-29, 2026
+### Configurazione ambiente Alibi
+
+- **Creazione di `XAIalibi`:** ambiente virtuale separato da `XAIvenv`, per evitare conflitti tra le dipendenze di Alibi e quelle utilizzate per addestrare ResNet50.
+- **Python 3.11:** installato perché più compatibile con Alibi 0.9.6 e con le librerie legacy necessarie ad alcuni metodi controfattuali.
+- **Aggiornamento di `pyenv`:** necessario perché la versione iniziale non riconosceva Python 3.11.18.
+- **Problema di compilazione:** l'installazione di Python falliva per un'incompatibilità tra il linker di macOS e l'SDK 27.0.
+- **Soluzione:** installazione di Python tramite `SDKROOT`, utilizzando temporaneamente l'SDK 26.5 già presente sul Mac, senza modificare la configurazione globale.
+- **Installazione di Alibi 0.9.6:** effettuata nel nuovo ambiente `XAIalibi`, mantenendo intatto `XAIvenv`.
+- **Errore di importazione:** Alibi non riusciva a caricare spaCy per l'assenza della dipendenza `click`. Risolto installando `click>=8,<9`.
+- **Verifica finale:** `pip check` senza conflitti dichiarati e importazione di Alibi riuscita.
+
+**Risultato:** ambiente `XAIalibi` funzionante per iniziare gli esperimenti con Alibi. Restano da installare e verificare le dipendenze specifiche dei metodi controfattuali scelti, incluso PyTorch per utilizzare ResNet50.

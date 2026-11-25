@@ -11,11 +11,21 @@ from torchvision import datasets, transforms
 from src.config import DATA_DIR, IMAGE_SIZE, BATCH_SIZE, RANDOM_SEED
 
 
-def get_transforms():
-    """Define the preprocessing transformations for ResNet18."""
 
-    transform = transforms.Compose([
-        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
+def get_transforms(training=False):
+    """Image preprocessing with optional data augmentation."""
+
+    transformations = [
+        transforms.Resize((IMAGE_SIZE, IMAGE_SIZE))
+    ]
+
+    # Apply augmentation only during training
+    if training:
+        transformations.append(
+            transforms.RandomHorizontalFlip(p=0.5)
+        )
+
+    transformations.extend([
         transforms.ToTensor(),
         transforms.Normalize(
             mean=[0.485, 0.456, 0.406],
@@ -23,7 +33,8 @@ def get_transforms():
         )
     ])
 
-    return transform
+    return transforms.Compose(transformations)
+
 
 
 
@@ -31,15 +42,21 @@ def get_dataloaders():
     """Load the dataset, split it into training, validation, and test sets, and return DataLoaders for each set.
     With train_test_split from sklearn.model_selection, we can stratify the split based on the class labels; so that the proportion of real and fake images is maintained in each subset."""
 
-    # Load the complete dataset
-    dataset = datasets.ImageFolder(
+    # Dataset with augmentation for training
+    dataset_train = datasets.ImageFolder(
         root=DATA_DIR,
-        transform=get_transforms()
+        transform=get_transforms(training=True)
+    )
+
+    # Dataset without augmentation for validation and test
+    dataset_eval = datasets.ImageFolder(
+        root=DATA_DIR,
+        transform=get_transforms(training=False)
     )
 
     # Image indices and corresponding class labels
-    indices = list(range(len(dataset)))
-    labels = dataset.targets
+    indices = list(range(len(dataset_eval)))
+    labels = dataset_eval.targets
 
     # First split: 70% training, 30% remaining
     train_idx, temp_idx = train_test_split(
@@ -61,9 +78,9 @@ def get_dataloaders():
     )
 
     # Create dataset subsets
-    train_set = Subset(dataset, train_idx)
-    val_set = Subset(dataset, val_idx)
-    test_set = Subset(dataset, test_idx)
+    train_set = Subset(dataset_train, train_idx)
+    val_set = Subset(dataset_eval, val_idx)
+    test_set = Subset(dataset_eval, test_idx)
 
     # Create DataLoaders
     train_loader = DataLoader(

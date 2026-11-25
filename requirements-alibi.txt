@@ -1,0 +1,22 @@
+
+# XAIalibi environment
+# Python 3.11
+
+# Counterfactual explainers
+alibi[tensorflow]==0.9.6
+
+# TensorFlow backend
+tensorflow==2.14.1
+
+# PyTorch classifier
+torch
+torchvision
+
+# Data processing and visualization
+numpy<2
+scikit-learn
+Pillow
+matplotlib
+
+# Jupyter notebook
+ipykernel
